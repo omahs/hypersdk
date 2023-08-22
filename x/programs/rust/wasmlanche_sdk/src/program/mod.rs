@@ -90,7 +90,7 @@ impl Store for ProgramValue {
         match tag.0 {
             1 => match to_string(bytes.to_vec()) {
                 Ok(val) => Ok(ProgramValue::StringObject(val)),
-                Err(_) => Err(StorageError::InvalidBytes()),
+                Err(_) => Err(StorageError::InvalidBytes),
             },
             2 => Ok(ProgramValue::MapObject),
             3 => {
@@ -101,7 +101,7 @@ impl Store for ProgramValue {
                 let address_bytes: [u8; 32] = match bytes.try_into() {
                     Ok(val) => val,
                     Err(_) => {
-                        return Err(StorageError::InvalidBytes());
+                        return Err(StorageError::InvalidBytes);
                     }
                 };
 

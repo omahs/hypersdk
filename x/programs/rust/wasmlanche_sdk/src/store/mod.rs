@@ -96,7 +96,7 @@ fn store_key_value<T: Store>(
         )
     } {
         0 => Ok(()),
-        _ => Err(StorageError::HostStoreError()),
+        _ => Err(StorageError::HostStoreError),
     }
 }
 
@@ -113,7 +113,7 @@ fn get_field_as_bytes(ctx: &ProgramContext, name: &[u8]) -> Result<Vec<u8>, Stor
     let bytes_ptr = unsafe { get_bytes(ctx, name_ptr, name_len, bytes_len) };
     // Defensive check here to unsure we don't grab out of bounds memory.
     if bytes_ptr < 0 {
-        return Err(StorageError::HostRetrieveError());
+        return Err(StorageError::HostRetrieveError);
     }
     let bytes_ptr = bytes_ptr as *mut u8;
 
