@@ -37,16 +37,18 @@ extern "C" {
 }
 
 /* wrappers for unsafe imported functions ----- */
-/// Returns the map_id or None if there was an error
+/// Returns the `map_id` or None if there was an error
+#[must_use]
 pub fn init_program_storage() -> ProgramContext {
     unsafe { ProgramContext::from(_init_program()) }
 }
 
-/// Stores the bytes at value_ptr to the bytes at key ptr on the host.
+/// Stores the bytes at `value_ptr` to the bytes at key ptr on the host.
 ///
 /// # Safety
-/// The caller must ensure that key_ptr + key_len and
-/// value_ptr + value_len point to valid memory locations.
+/// The caller must ensure that `key_ptr` + `key_len` and
+/// `value_ptr` + `value_len` point to valid memory locations.
+#[must_use]
 pub unsafe fn store_bytes(
     ctx: &ProgramContext,
     key_ptr: *const u8,
@@ -60,7 +62,8 @@ pub unsafe fn store_bytes(
 /// Gets the length of the bytes associated with the key from the host.
 ///
 /// # Safety
-/// The caller must ensure that key_ptr + key_len points to valid memory locations.
+/// The caller must ensure that `key_ptr` + `key_len` points to valid memory locations.
+#[must_use]
 pub unsafe fn get_bytes_len(ctx: &ProgramContext, key_ptr: *const u8, key_len: usize) -> i32 {
     unsafe { _get_bytes_len(ctx.program_id, key_ptr, key_len) }
 }
@@ -68,7 +71,8 @@ pub unsafe fn get_bytes_len(ctx: &ProgramContext, key_ptr: *const u8, key_len: u
 /// Gets the bytes associated with the key from the host.
 ///
 /// # Safety
-/// The caller must ensure that key_ptr + key_len points to valid memory locations.
+/// The caller must ensure that `key_ptr` + `key_len` points to valid memory locations.
+#[must_use]
 pub unsafe fn get_bytes(
     ctx: &ProgramContext,
     key_ptr: *const u8,
@@ -79,7 +83,8 @@ pub unsafe fn get_bytes(
 }
 
 /// Invokes another program and returns the result.
-pub fn host_program_invoke(
+#[must_use]
+pub fn invoke_program_method(
     ctx: &ProgramContext,
     call_ctx: &ProgramContext,
     method_name: &str,
@@ -96,36 +101,4 @@ pub fn host_program_invoke(
             args.len(),
         )
     }
-}
-
-/* memory functions ------------------------------------------- */
-// https://radu-matei.com/blog/practical-guide-to-wasm-memory/
-
-/// Allocate memory into the module's linear memory
-/// and return the offset to the start of the block.
-#[no_mangle]
-pub fn alloc(len: usize) -> *mut u8 {
-    // create a new mutable buffer with capacity `len`
-    let mut buf = Vec::with_capacity(len);
-    // take a mutable pointer to the buffer
-    let ptr = buf.as_mut_ptr();
-    // take ownership of the memory block and
-    // ensure that its destructor is not
-    // called when the object goes out of scope
-    // at the end of the function
-    std::mem::forget(buf);
-    // return the pointer so the runtime
-    // can write data at this offset
-    ptr
-}
-
-/// # Safety
-/// `ptr` must be a pointer to a block of memory.
-///
-/// deallocates the memory block at `ptr` with a given `capacity`.
-#[no_mangle]
-pub unsafe fn dealloc(ptr: *mut u8, capacity: usize) {
-    // always deallocate the full capacity, initialize vs uninitialized memory is irrelevant here
-    let data = Vec::from_raw_parts(ptr, capacity, capacity);
-    std::mem::drop(data);
 }

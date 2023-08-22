@@ -1,4 +1,4 @@
-use wasmlanche_sdk::program::{Program, ProgramValue};
+use wasmlanche_sdk::program::{Program, Value};
 use wasmlanche_sdk::store::ProgramContext;
 use wasmlanche_sdk::types::Address;
 
@@ -12,7 +12,7 @@ pub fn init_program() -> i64 {
     token_program.add_field(String::from("name"), "WasmCoin".into());
     token_program.add_field(String::from("symbol"), "WACK".into());
     token_program.add_field(String::from("total_supply"), 123456789.into());
-    token_program.add_field(String::from("balances"), ProgramValue::MapObject);
+    token_program.add_field(String::from("balances"), Value::MapObject);
     token_program.publish().unwrap().into()
 }
 
@@ -20,7 +20,7 @@ pub fn init_program() -> i64 {
 #[expose]
 pub fn get_total_supply(ctx: ProgramContext) -> i64 {
     ctx.get_value("total_supply")
-        .unwrap_or(ProgramValue::IntObject(-1))
+        .unwrap_or(Value::IntObject(-1))
         .into()
 }
 
@@ -29,14 +29,14 @@ pub fn get_total_supply(ctx: ProgramContext) -> i64 {
 pub fn mint_to(ctx: ProgramContext, recipient: Address, amount: i64) -> bool {
     let amount = amount
         + ctx
-            .get_map_value("balances", recipient.into())
+            .get_map_value("balances", &recipient.into())
             .map(i64::from)
             .unwrap_or(0);
 
     ctx.store_map_value(
         "balances",
-        ProgramValue::from(recipient),
-        ProgramValue::IntObject(amount),
+        &Value::from(recipient),
+        &Value::IntObject(amount),
     )
     .is_ok()
 }
@@ -50,7 +50,7 @@ pub fn transfer(ctx: ProgramContext, sender: Address, recipient: Address, amount
     }
     // ensure the sender has adequate balance
     let sender_balance = ctx
-        .get_map_value("balances", ProgramValue::from(sender))
+        .get_map_value("balances", &Value::from(sender))
         .map(i64::from)
         .unwrap_or(-1);
 
@@ -59,19 +59,19 @@ pub fn transfer(ctx: ProgramContext, sender: Address, recipient: Address, amount
     }
 
     let recipient_balance = ctx
-        .get_map_value("balances", ProgramValue::from(recipient))
+        .get_map_value("balances", &Value::from(recipient))
         .map(i64::from)
         .unwrap_or(0);
     ctx.store_map_value(
         "balances",
-        ProgramValue::from(sender),
-        ProgramValue::IntObject(sender_balance - amount),
+        &Value::from(sender),
+        &Value::IntObject(sender_balance - amount),
     )
     .and_then(|_| {
         ctx.store_map_value(
             "balances",
-            ProgramValue::from(recipient),
-            ProgramValue::IntObject(recipient_balance + amount),
+            &Value::from(recipient),
+            &Value::IntObject(recipient_balance + amount),
         )
     })
     .is_ok()
@@ -80,7 +80,7 @@ pub fn transfer(ctx: ProgramContext, sender: Address, recipient: Address, amount
 /// Gets the balance of the recipient.
 #[expose]
 pub fn get_balance(ctx: ProgramContext, recipient: Address) -> i64 {
-    ctx.get_map_value("balances", ProgramValue::from(recipient))
+    ctx.get_map_value("balances", &Value::from(recipient))
         .map(i64::from)
         .unwrap_or(0)
 }

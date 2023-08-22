@@ -1,6 +1,6 @@
 /// Counter but only for even numbers
 use expose_macro::expose;
-use wasmlanche_sdk::program::{Program, ProgramValue};
+use wasmlanche_sdk::program::{Program, Value};
 use wasmlanche_sdk::store::ProgramContext;
 use wasmlanche_sdk::types::Address;
 
@@ -12,7 +12,7 @@ fn init_program() -> i64 {
 
 #[expose]
 fn set(ctx: ProgramContext, counter_ctx: ProgramContext) {
-    ctx.store_value("counter", &ProgramValue::ProgramObject(counter_ctx))
+    ctx.store_value("counter", &Value::ProgramObject(counter_ctx))
         .expect("Failed to store token contract address");
 }
 
@@ -26,10 +26,10 @@ fn inc(ctx: ProgramContext, whose: Address, amt: i64) {
             return;
         }
     };
-    ctx.program_invoke(
+    let _ = ctx.invoke_program_method(
         &call_ctx,
         "inc",
-        &[ProgramValue::from(whose), ProgramValue::IntObject(amt * 2)],
+        &[Value::from(whose), Value::IntObject(amt * 2)],
     );
 }
 
@@ -44,6 +44,6 @@ fn value(ctx: ProgramContext, whose: Address) -> i64 {
         }
     };
 
-    let result = ctx.program_invoke(&call_ctx, "value", &[ProgramValue::from(whose)]);
+    let result = ctx.invoke_program_method(&call_ctx, "value", &[Value::from(whose)]);
     i64::from(result)
 }

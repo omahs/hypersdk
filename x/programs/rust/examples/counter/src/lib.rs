@@ -1,5 +1,5 @@
 use expose_macro::expose;
-use wasmlanche_sdk::program::{Program, ProgramValue};
+use wasmlanche_sdk::program::{Program, Value};
 use wasmlanche_sdk::store::ProgramContext;
 use wasmlanche_sdk::types::Address;
 
@@ -8,7 +8,7 @@ use wasmlanche_sdk::types::Address;
 fn init_program() -> i64 {
     let mut counter_program = Program::new();
     counter_program.add_field(String::from("counter"), 0.into());
-    counter_program.add_field(String::from("counts"), ProgramValue::MapObject);
+    counter_program.add_field(String::from("counts"), Value::MapObject);
     counter_program.publish().unwrap().into()
 }
 
@@ -17,17 +17,13 @@ fn init_program() -> i64 {
 fn inc(ctx: ProgramContext, to: Address, amount: i64) {
     let counter = amount + value(ctx.clone(), to);
     // dont check for error/ok
-    let _ = ctx.store_map_value(
-        "counts",
-        ProgramValue::from(to),
-        ProgramValue::IntObject(counter),
-    );
+    let _ = ctx.store_map_value("counts", &Value::from(to), &Value::IntObject(counter));
 }
 
 /// Gets the count at the address.
 #[expose]
 fn value(ctx: ProgramContext, of: Address) -> i64 {
-    ctx.get_map_value("counts", ProgramValue::from(of))
+    ctx.get_map_value("counts", &Value::from(of))
         .map(i64::from)
         .unwrap_or(0)
 }

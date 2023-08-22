@@ -1,4 +1,4 @@
-use crate::program::ProgramValue;
+use crate::program::Value;
 use crate::store::ProgramContext;
 
 /// A struct that enforces a fixed length of 32 bytes which represents an address.
@@ -10,35 +10,37 @@ pub struct Address {
 impl Address {
     pub const LEN: usize = 32;
     // Constructor function for Address
+    #[must_use]
     pub fn new(bytes: [u8; Self::LEN]) -> Self {
         Self { bytes }
     }
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
 }
 
-impl From<String> for ProgramValue {
+impl From<String> for Value {
     fn from(value: String) -> Self {
-        ProgramValue::StringObject(value)
+        Value::StringObject(value)
     }
 }
 
-impl From<&str> for ProgramValue {
+impl From<&str> for Value {
     fn from(value: &str) -> Self {
-        ProgramValue::StringObject(String::from(value))
+        Value::StringObject(String::from(value))
     }
 }
 
-impl From<i64> for ProgramValue {
+impl From<i64> for Value {
     fn from(value: i64) -> Self {
-        ProgramValue::IntObject(value)
+        Value::IntObject(value)
     }
 }
 
-impl From<Address> for ProgramValue {
+impl From<Address> for Value {
     fn from(value: Address) -> Self {
-        ProgramValue::AddressObject(value)
+        Value::AddressObject(value)
     }
 }
 
@@ -54,19 +56,19 @@ impl From<i64> for Address {
     }
 }
 
-impl From<ProgramValue> for i64 {
-    fn from(value: ProgramValue) -> Self {
+impl From<Value> for i64 {
+    fn from(value: Value) -> Self {
         match value {
-            ProgramValue::IntObject(i) => i,
+            Value::IntObject(i) => i,
             _ => panic!("Cannot conver to i64"),
         }
     }
 }
 
-impl From<ProgramValue> for ProgramContext {
-    fn from(value: ProgramValue) -> Self {
+impl From<Value> for ProgramContext {
+    fn from(value: Value) -> Self {
         match value {
-            ProgramValue::ProgramObject(i) => i,
+            Value::ProgramObject(i) => i,
             _ => panic!("Cannot conver to ProgramContext"),
         }
     }

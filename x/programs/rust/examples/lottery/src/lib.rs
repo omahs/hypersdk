@@ -1,6 +1,6 @@
 /// Counter but only for even numbers
 use expose_macro::expose;
-use wasmlanche_sdk::program::{Program, ProgramValue};
+use wasmlanche_sdk::program::{Program, Value};
 use wasmlanche_sdk::store::{ProgramContext, Store};
 use wasmlanche_sdk::types::Address;
 
@@ -18,12 +18,9 @@ fn init_program() -> i64 {
 /// before play can be called, otherwise there is no reference contract and address.
 #[expose]
 fn set(ctx: ProgramContext, counter_ctx: ProgramContext, lot_address: Address) {
-    ctx.store_value(
-        TOKEN_PROGRAM_NAME,
-        &ProgramValue::ProgramObject(counter_ctx),
-    )
-    .expect("Failed to store token contract address");
-    ctx.store_value("address", &ProgramValue::from(lot_address))
+    ctx.store_value(TOKEN_PROGRAM_NAME, &Value::ProgramObject(counter_ctx))
+        .expect("Failed to store token contract address");
+    ctx.store_value("address", &Value::from(lot_address))
         .expect("Failed to store address");
 }
 
@@ -33,6 +30,7 @@ fn set(ctx: ProgramContext, counter_ctx: ProgramContext, lot_address: Address) {
 #[expose]
 fn play(ctx: ProgramContext, player: Address) -> bool {
     let num = get_random_number(player);
+
     // If win transfer to player
     let call_ctx = match ctx.get_value(TOKEN_PROGRAM_NAME) {
         Ok(value) => ProgramContext::from(value),
@@ -49,15 +47,12 @@ fn play(ctx: ProgramContext, player: Address) -> bool {
     };
 
     // Transfer
-    ctx.program_invoke(
+    let _ = ctx.invoke_program_method(
         &call_ctx,
         "transfer",
-        &[
-            lotto_addy,
-            ProgramValue::from(player),
-            ProgramValue::IntObject(num),
-        ],
+        &[lotto_addy, Value::from(player), Value::IntObject(num)],
     );
+
     true
 }
 
@@ -68,7 +63,7 @@ fn get_random_number(seed: Address) -> i64 {
     use rand_chacha::rand_core::SeedableRng;
     use rand_chacha::ChaCha8Rng;
 
-    let first_val = ProgramValue::from(seed);
+    let first_val = Value::from(seed);
     let mut rng = ChaCha8Rng::seed_from_u64(first_val.as_bytes()[1] as u64);
     rng.gen_range(0..100)
 }
